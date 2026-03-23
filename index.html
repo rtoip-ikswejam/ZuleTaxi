@@ -777,6 +777,10 @@
                         <label>Adres:</label>
                         <textarea id="concertAddress" rows="3" required></textarea>
                     </div>
+                    <div class="form-group">
+                        <label>Link do strony wykonawcy (opcjonalny):</label>
+                        <input type="url" id="concertArtistUrl" placeholder="https://...">
+                    </div>
                     <button type="submit" class="btn">Dodaj</button>
                 </form>
             </div>
@@ -898,7 +902,7 @@
         // ═══════════════════════════════════════════════════════════════
         // KONFIGURACJA - WKLEJ URL GOOGLE APPS SCRIPT TUTAJ:
         // ═══════════════════════════════════════════════════════════════
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwoMMGrwtFuTVnUaLWl7ADoa_TNkqf3vTYU_3N9R-95Qt1cHKTi9Jsh3tfFlFwxs0Ro7w/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyMONAYSqmtpYMhpmPPfqqKHA0SPeD4z2L9FLtp_Td2un9meSKF9eXCOwSUmptIkN4H6w/exec';
         
         let currentUser = null;
         let currentConcertId = null;
@@ -1072,6 +1076,7 @@
                         <div><span class="info-tag">📅 ${c.date}</span> <span class="info-tag">🕐 ${c.time}</span></div>
                         <div><span class="info-tag">📍 ${c.location}</span></div>
                         <p style="margin:10px 0;color:#666;font-size:14px">${c.address}</p>
+                        ${c.artistUrl ? `<div style="margin:8px 0"><a href="${c.artistUrl}" target="_blank" rel="noopener noreferrer" class="info-tag" style="text-decoration:none">🎵 Strona wykonawcy</a></div>` : ''}
                         <div class="admin-actions">
                             <button class="btn btn-small" onclick="viewConcertDetails('${c.concertId}')">🚗 Zobacz przejazdy</button>
                             ${currentUser && currentUser.role === 'admin' ? `
@@ -1130,7 +1135,8 @@
                 date: document.getElementById('concertDate').value,
                 time: document.getElementById('concertTime').value,
                 location: document.getElementById('concertLocation').value,
-                address: document.getElementById('concertAddress').value
+                address: document.getElementById('concertAddress').value,
+                artistUrl: document.getElementById('concertArtistUrl').value
             });
             
             if (result.success) {
@@ -1196,6 +1202,35 @@
             }
         }
         
+        // EDIT RIDE
+        function openEditRide(ride) {
+            document.getElementById('editRideId').value = ride.rideId;
+            document.getElementById('editRideTotalSeats').value = ride.totalSeats;
+            document.getElementById('editRideStartPoint').value = ride.startPoint;
+            document.getElementById('editRideDirection').value = ride.direction;
+            document.getElementById('editRideComment').value = ride.comment || '';
+            document.getElementById('editRideAlert').innerHTML = '';
+            openModal('editRideModal');
+        }
+
+        async function updateRide(e) {
+            e.preventDefault();
+            const result = await apiCall('updateRide', {
+                userId: currentUser.userId,
+                rideId: document.getElementById('editRideId').value,
+                totalSeats: parseInt(document.getElementById('editRideTotalSeats').value),
+                startPoint: document.getElementById('editRideStartPoint').value,
+                direction: document.getElementById('editRideDirection').value,
+                comment: document.getElementById('editRideComment').value
+            });
+            if (result.success) {
+                showAlert('editRideAlert', '✅ Przejazd zaktualizowany!', 'success');
+                setTimeout(() => { closeModal('editRideModal'); loadMyRides(); }, 1500);
+            } else {
+                showAlert('editRideAlert', result.error, 'error');
+            }
+        }
+
         // LOAD MY RIDES
         async function loadMyRides() {
             const list = document.getElementById('myRidesList');
@@ -1209,6 +1244,7 @@
                         <div><span class="info-tag">📅 ${r.concert.date}</span> <span class="info-tag">📍 ${r.concert.location}</span></div>
                         <div><span class="info-tag">🚗 ${r.availableSeats}/${r.totalSeats}</span> <span class="info-tag">Start: ${r.startPoint}</span></div>
                         <div><span class="info-tag">${r.status === 'active' ? '✅ Aktywny' : '❌ Anulowany'}</span></div>
+                        ${r.status === 'active' ? `<button class="btn btn-small btn-secondary" onclick="openEditRide(${JSON.stringify(r).split('"').join('&quot;')})" style="margin-top:10px;width:100%">✏️ Edytuj przejazd</button>` : ''}
                     </div>
                 `).join('');
             } else {
@@ -1261,18 +1297,19 @@
         // OPEN EDIT CONCERT MODAL
         function openEditConcert(concert) {
             document.getElementById('editConcertId').value = concert.concertId;
-            document.getElementById('editConcertOldDate').value = concert.date;
             document.getElementById('editConcertName').value = concert.name;
-            // Convert DD.MM.YYYY → YYYY-MM-DD for date input
+            // Konwertuj DD.MM.YYYY → YYYY-MM-DD dla input type="date"
             const dateParts = concert.date.split('.');
-            if (dateParts.length === 3) {
-                document.getElementById('editConcertDate').value = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-            } else {
-                document.getElementById('editConcertDate').value = concert.date;
-            }
+            const dateForInput = dateParts.length === 3
+                ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`
+                : concert.date;
+            document.getElementById('editConcertDate').value = dateForInput;
+            // Zapisz w tym samym formacie co input, żeby porównanie dateChanged działało
+            document.getElementById('editConcertOldDate').value = dateForInput;
             document.getElementById('editConcertTime').value = concert.time || '';
             document.getElementById('editConcertLocation').value = concert.location;
             document.getElementById('editConcertAddress').value = concert.address;
+            document.getElementById('editConcertArtistUrl').value = concert.artistUrl || '';
             document.getElementById('editConcertMessage').value = '';
             document.getElementById('editConcertAlert').innerHTML = '';
             openModal('editConcertModal');
@@ -1293,6 +1330,7 @@
                 time: document.getElementById('editConcertTime').value,
                 location: document.getElementById('editConcertLocation').value,
                 address: document.getElementById('editConcertAddress').value,
+                artistUrl: document.getElementById('editConcertArtistUrl').value,
                 message: document.getElementById('editConcertMessage').value,
                 dateChanged: dateChanged
             });
@@ -1409,10 +1447,56 @@
                     <textarea id="editConcertAddress" rows="3" required></textarea>
                 </div>
                 <div class="form-group">
+                    <label>Link do strony wykonawcy (opcjonalny):</label>
+                    <input type="url" id="editConcertArtistUrl" placeholder="https://...">
+                </div>
+                <div class="form-group">
                     <label>Wiadomość do uczestników (opcjonalna):</label>
                     <textarea id="editConcertMessage" rows="3" placeholder="np. Zmieniliśmy godzinę koncertu. Prosimy o weryfikację rezerwacji."></textarea>
                 </div>
                 <button type="submit" class="btn">💾 Zapisz i powiadom uczestników</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="editRideModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edytuj Przejazd</h2>
+                <button class="modal-close" onclick="closeModal('editRideModal')">&times;</button>
+            </div>
+            <div id="editRideAlert"></div>
+            <form onsubmit="updateRide(event)">
+                <input type="hidden" id="editRideId">
+                <div class="form-group">
+                    <label>Liczba miejsc:</label>
+                    <input type="number" id="editRideTotalSeats" min="1" max="8" required>
+                </div>
+                <div class="form-group">
+                    <label>Start:</label>
+                    <select id="editRideStartPoint" required>
+                        <option value="">Wybierz...</option>
+                        <option>Bemowo</option><option>Białołęka</option><option>Bielany</option>
+                        <option>Mokotów</option><option>Ochota</option><option>Praga-Południe</option>
+                        <option>Praga-Północ</option><option>Rembertów</option><option>Śródmieście</option>
+                        <option>Targówek</option><option>Ursus</option><option>Ursynów</option>
+                        <option>Wawer</option><option>Wesoła</option><option>Wilanów</option>
+                        <option>Włochy</option><option>Wola</option><option>Żoliborz</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kierunek:</label>
+                    <select id="editRideDirection" required>
+                        <option value="both">Tam i z powrotem</option>
+                        <option value="there">Tylko tam</option>
+                        <option value="back">Tylko z powrotem</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Komentarz:</label>
+                    <textarea id="editRideComment" rows="3" placeholder="np. Auto niepalące, wyjazd 15:00"></textarea>
+                </div>
+                <button type="submit" class="btn">💾 Zapisz</button>
             </form>
         </div>
     </div>
