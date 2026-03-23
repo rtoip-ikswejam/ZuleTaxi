@@ -544,6 +544,14 @@
         cursor: pointer;
     }
 
+    /* ── ADMIN ACTIONS ── */
+    .admin-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
     /* ── FOOTER LOGO ── */
     .footer-logo {
         text-align: center;
@@ -890,7 +898,7 @@
         // ═══════════════════════════════════════════════════════════════
         // KONFIGURACJA - WKLEJ URL GOOGLE APPS SCRIPT TUTAJ:
         // ═══════════════════════════════════════════════════════════════
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzf_2y_O6vUojpFiIpY8jABa1-BI0GKvLEJHkgoJ3c1zRZJzLXjRE6CYNtSNN3NAWfL/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyDJktlNQ9fRq11PIPeGKwSHdMKdeNtv4-MBH95Fjs8kaq6fxz3ClgsWr0VAMaJBOWEPw/exec';
         
         let currentUser = null;
         let currentConcertId = null;
@@ -1064,7 +1072,13 @@
                         <div><span class="info-tag">📅 ${c.date}</span> <span class="info-tag">🕐 ${c.time}</span></div>
                         <div><span class="info-tag">📍 ${c.location}</span></div>
                         <p style="margin:10px 0;color:#666;font-size:14px">${c.address}</p>
-                        <button class="btn btn-small" onclick="viewConcertDetails('${c.concertId}')">Zobacz przejazdy</button>
+                        <div class="admin-actions">
+                            <button class="btn btn-small" onclick="viewConcertDetails('${c.concertId}')">🚗 Zobacz przejazdy</button>
+                            ${currentUser && currentUser.role === 'admin' ? `
+                                <button class="btn btn-small btn-secondary" onclick="openEditConcert(${JSON.stringify(c).split('"').join('&quot;')})">✏️ Edytuj</button>
+                                <button class="btn btn-small btn-danger" onclick="cancelConcertAdmin('${c.concertId}')">✕ Anuluj koncert</button>
+                            ` : ''}
+                        </div>
                     </div>
                 `).join('');
             } else {
@@ -1243,6 +1257,60 @@
             if (result.success) { alert('Anulowano'); closeModal('concertModal'); loadMyRides(); }
             else alert(result.error);
         }
+
+        // OPEN EDIT CONCERT MODAL
+        function openEditConcert(concert) {
+            document.getElementById('editConcertId').value = concert.concertId;
+            document.getElementById('editConcertOldDate').value = concert.date;
+            document.getElementById('editConcertName').value = concert.name;
+            // Convert DD.MM.YYYY → YYYY-MM-DD for date input
+            const dateParts = concert.date.split('.');
+            if (dateParts.length === 3) {
+                document.getElementById('editConcertDate').value = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+            } else {
+                document.getElementById('editConcertDate').value = concert.date;
+            }
+            document.getElementById('editConcertTime').value = concert.time || '';
+            document.getElementById('editConcertLocation').value = concert.location;
+            document.getElementById('editConcertAddress').value = concert.address;
+            document.getElementById('editConcertMessage').value = '';
+            document.getElementById('editConcertAlert').innerHTML = '';
+            openModal('editConcertModal');
+        }
+
+        // UPDATE CONCERT
+        async function updateConcert(e) {
+            e.preventDefault();
+            const newDate = document.getElementById('editConcertDate').value;
+            const oldDate = document.getElementById('editConcertOldDate').value;
+            const dateChanged = newDate !== oldDate;
+            const result = await apiCall('updateConcert', {
+                userId: currentUser.userId,
+                userRole: currentUser.role,
+                concertId: document.getElementById('editConcertId').value,
+                name: document.getElementById('editConcertName').value,
+                date: newDate,
+                time: document.getElementById('editConcertTime').value,
+                location: document.getElementById('editConcertLocation').value,
+                address: document.getElementById('editConcertAddress').value,
+                message: document.getElementById('editConcertMessage').value,
+                dateChanged: dateChanged
+            });
+            if (result.success) {
+                showAlert('editConcertAlert', '✅ Zapisano! Uczestnicy zostali powiadomieni.', 'success');
+                setTimeout(() => { closeModal('editConcertModal'); loadConcerts(); }, 2000);
+            } else {
+                showAlert('editConcertAlert', result.error, 'error');
+            }
+        }
+
+        // CANCEL CONCERT (admin)
+        async function cancelConcertAdmin(concertId) {
+            if (!confirm('Anulować koncert? Wszyscy uczestnicy przejazdów zostaną powiadomieni e-mailem.')) return;
+            const result = await apiCall('cancelConcert', { userId: currentUser.userId, userRole: currentUser.role, concertId });
+            if (result.success) { alert('Koncert anulowany. Powiadomienia wysłane.'); loadConcerts(); }
+            else alert(result.error);
+        }
         
         // LOAD PROFILE
         function loadProfile() {
@@ -1309,5 +1377,45 @@
             }
         };
     </script>
+    <!-- MODAL: EDIT CONCERT -->
+    <div id="editConcertModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edytuj Koncert</h2>
+                <button class="modal-close" onclick="closeModal('editConcertModal')">&times;</button>
+            </div>
+            <div id="editConcertAlert"></div>
+            <form onsubmit="updateConcert(event)">
+                <input type="hidden" id="editConcertId">
+                <input type="hidden" id="editConcertOldDate">
+                <div class="form-group">
+                    <label>Nazwa:</label>
+                    <input type="text" id="editConcertName" required>
+                </div>
+                <div class="form-group">
+                    <label>Data:</label>
+                    <input type="date" id="editConcertDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Godzina:</label>
+                    <input type="time" id="editConcertTime" required>
+                </div>
+                <div class="form-group">
+                    <label>Miejscowość:</label>
+                    <input type="text" id="editConcertLocation" required>
+                </div>
+                <div class="form-group">
+                    <label>Adres:</label>
+                    <textarea id="editConcertAddress" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Wiadomość do uczestników (opcjonalna):</label>
+                    <textarea id="editConcertMessage" rows="3" placeholder="np. Zmieniliśmy godzinę koncertu. Prosimy o weryfikację rezerwacji."></textarea>
+                </div>
+                <button type="submit" class="btn">💾 Zapisz i powiadom uczestników</button>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>
