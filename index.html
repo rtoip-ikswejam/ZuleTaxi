@@ -4,29 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="theme-color" content="#667eea">
+    <meta name="description" content="System carpoolingu na koncerty poezji śpiewanej">
     <title>Carpooling - Koncerty Poezji Śpiewanej</title>
-    
-    <!--
-    ══════════════════════════════════════════════════════════════════════
-    CARPOOLING - KONCERTY POEZJI ŚPIEWANEJ
-    Kompletna aplikacja do zarządzania wspólnymi przejazdami na koncerty
-    ══════════════════════════════════════════════════════════════════════
-    
-    📋 INSTRUKCJA WDROŻENIA:
-    
-    1. Stwórz Google Sheet z 5 arkuszami (dokładne struktury w dokumentacji)
-    2. Wejdź w Rozszerzenia → Apps Script
-    3. Wklej kod backendu (osobny artifact "Google Apps Script - Backend")
-    4. Wdróż jako aplikację internetową
-    5. Skopiuj URL
-    6. W tym pliku (linia 560) wklej URL zamiast 'WKLEJ_TUTAJ...'
-    7. Otwórz ten plik w przeglądarce
-    
-    🔒 Bezpieczeństwo: hasła hashowane, backend jako proxy
-    📱 RWD: działa na mobile i desktop
-    ══════════════════════════════════════════════════════════════════════
-    -->
-    
     <style>
         * {
             margin: 0;
@@ -48,6 +27,7 @@
             margin: 0 auto;
             background: white;
             min-height: 100vh;
+            overflow: hidden;
         }
         
         .header {
@@ -61,8 +41,15 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .header h1 { font-size: 1.5em; margin-bottom: 5px; }
-        .header p { font-size: 0.9em; opacity: 0.9; }
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
         
         .nav {
             display: grid;
@@ -81,27 +68,53 @@
             font-size: 14px;
             font-weight: 600;
             transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             min-height: 44px;
         }
         
-        .nav button:hover, .nav button.active {
+        .nav button:hover, .nav button:active, .nav button.active {
             background: white;
             color: #667eea;
+            transform: scale(1.02);
         }
         
-        .content { padding: 20px 15px 40px; }
+        .content {
+            padding: 20px 15px;
+            padding-bottom: 40px;
+        }
         
-        .screen { display: none; animation: fadeIn 0.3s ease-in; }
-        .screen.active { display: block; }
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
-        h2 { color: #333; margin-bottom: 20px; font-size: 1.5em; }
+        .screen.active {
+            display: block;
+        }
         
-        .form-group { margin-bottom: 18px; }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        h3 {
+            color: #333;
+            margin: 20px 0 10px 0;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
         .form-group label {
             display: block;
             margin-bottom: 6px;
@@ -110,18 +123,28 @@
             font-size: 14px;
         }
         
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
             width: 100%;
             padding: 14px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 16px;
+            transition: border 0.3s;
             font-family: inherit;
         }
         
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
         }
         
         .checkbox-group {
@@ -137,6 +160,12 @@
             cursor: pointer;
         }
         
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -146,16 +175,37 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
             width: 100%;
             margin-bottom: 10px;
             min-height: 48px;
         }
         
-        .btn:hover { transform: translateY(-2px); }
-        .btn-secondary { background: #6c757d; }
-        .btn-danger { background: #dc3545; }
-        .btn-small { padding: 10px 20px; font-size: 14px; min-height: 44px; }
-        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .btn:hover, .btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 14px;
+            min-height: 44px;
+            margin-bottom: 0;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
         
         .concert-card, .ride-card {
             background: #f8f9fa;
@@ -170,6 +220,27 @@
             color: #667eea;
             margin-bottom: 12px;
             font-size: 1.2em;
+            line-height: 1.3;
+        }
+        
+        .concert-card h4, .ride-card h4 {
+            color: #333;
+            margin: 12px 0 8px 0;
+            font-size: 1em;
+        }
+        
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-row span {
+            flex: 1 1 auto;
+            min-width: 0;
         }
         
         .info-tag {
@@ -187,10 +258,20 @@
             border-radius: 10px;
             margin-bottom: 20px;
             font-size: 14px;
+            line-height: 1.5;
         }
         
-        .alert-success { background: #d4edda; color: #155724; }
-        .alert-error { background: #f8d7da; color: #721c24; }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         
         .user-info {
             background: #e7f3ff;
@@ -198,6 +279,7 @@
             border-radius: 10px;
             margin-bottom: 20px;
             font-size: 14px;
+            line-height: 1.6;
         }
         
         .modal {
@@ -209,11 +291,16 @@
             height: 100%;
             background: rgba(0,0,0,0.6);
             z-index: 1000;
+            align-items: flex-start;
+            justify-content: center;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             padding: 20px 10px;
         }
         
-        .modal.active { display: flex; align-items: flex-start; justify-content: center; }
+        .modal.active {
+            display: flex;
+        }
         
         .modal-content {
             background: white;
@@ -222,6 +309,9 @@
             width: 100%;
             max-width: 500px;
             margin: auto;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         .modal-header {
@@ -233,14 +323,32 @@
             border-bottom: 2px solid #f0f0f0;
         }
         
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3em;
+            flex: 1;
+        }
+        
         .modal-close {
             background: #f0f0f0;
             border: none;
-            width: 44px;
-            height: 44px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             font-size: 24px;
             cursor: pointer;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 10px;
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        .modal-close:hover, .modal-close:active {
+            background: #e0e0e0;
         }
         
         .loader {
@@ -262,6 +370,18 @@
             text-align: center;
             padding: 40px 20px;
             color: #999;
+            font-size: 16px;
+        }
+        
+        .empty-state::before {
+            content: "📭";
+            display: block;
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .rides-list {
+            margin-top: 20px;
         }
         
         .passenger-list {
@@ -273,20 +393,95 @@
         
         .passenger-item {
             padding: 8px 0;
+            color: #666;
             font-size: 14px;
             border-bottom: 1px solid #f0f0f0;
         }
         
-        .link { color: #667eea; text-decoration: none; font-weight: 600; }
-        .text-center { text-align: center; }
+        .passenger-item:last-child {
+            border-bottom: none;
+        }
         
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e0e0e0;
+            margin: 25px 0;
+        }
+        
+        /* Responsywność dla większych ekranów */
         @media (min-width: 768px) {
-            .container { border-radius: 20px; margin: 20px auto; }
-            .header { border-radius: 20px 20px 0 0; padding: 30px; }
-            .header h1 { font-size: 2em; }
-            .content { padding: 30px; }
-            .btn-group { flex-direction: row; }
-            .btn { width: auto; }
+            .container {
+                border-radius: 20px;
+                margin: 20px auto;
+                min-height: calc(100vh - 40px);
+            }
+            
+            .header {
+                border-radius: 20px 20px 0 0;
+                padding: 30px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header p {
+                font-size: 1em;
+            }
+            
+            .nav {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 10px;
+            }
+            
+            .content {
+                padding: 30px;
+            }
+            
+            .btn-group {
+                flex-direction: row;
+            }
+            
+            .btn {
+                width: auto;
+            }
+            
+            .modal {
+                padding: 40px 20px;
+            }
+            
+            .modal-content {
+                padding: 30px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .info-row {
+                flex-wrap: nowrap;
+            }
+        }
+        
+        /* Animacje dla lepszego UX */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
@@ -298,30 +493,30 @@
             <div class="nav" id="mainNav" style="display: none;">
                 <button onclick="showScreen('concerts')">Koncerty</button>
                 <button onclick="showScreen('myRides')" id="myRidesBtn" style="display: none;">Moje Przejazdy</button>
-                <button onclick="showScreen('myBookings')">Rezerwacje</button>
+                <button onclick="showScreen('myBookings')">Moje Rezerwacje</button>
                 <button onclick="showScreen('profile')">Profil</button>
                 <button onclick="showScreen('addConcert')" id="adminBtn" style="display: none;">+ Koncert</button>
-                <button onclick="logout()">Wyloguj</button>
+                <button onclick="logout()" class="btn-secondary">Wyloguj</button>
             </div>
         </div>
         
         <div class="content">
-            <!-- LOGIN -->
+            <!-- EKRAN LOGOWANIA -->
             <div id="loginScreen" class="screen active">
                 <h2>Logowanie</h2>
                 <div id="loginAlert"></div>
                 <form onsubmit="login(event)">
                     <div class="form-group">
                         <label>Email:</label>
-                        <input type="email" id="loginEmail" required>
+                        <input type="email" id="loginEmail" required autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label>Hasło:</label>
-                        <input type="password" id="loginPassword" required>
+                        <input type="password" id="loginPassword" required autocomplete="current-password">
                     </div>
                     <div class="btn-group">
-                        <button type="submit" class="btn">Zaloguj</button>
-                        <button type="button" class="btn btn-secondary" onclick="showScreen('register')">Rejestracja</button>
+                        <button type="submit" class="btn">Zaloguj się</button>
+                        <button type="button" class="btn btn-secondary" onclick="showScreen('register')">Zarejestruj się</button>
                     </div>
                 </form>
                 <p class="text-center" style="margin-top: 20px;">
@@ -329,15 +524,17 @@
                 </p>
             </div>
             
-            <!-- FORGOT PASSWORD -->
+            <!-- EKRAN ZAPOMNIAŁEM HASŁA -->
             <div id="forgotPasswordScreen" class="screen">
                 <h2>Resetowanie hasła</h2>
                 <div id="forgotPasswordAlert"></div>
-                <p style="color: #666; margin-bottom: 20px;">Podaj adres email. Wyślemy link do zresetowania hasła.</p>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px; line-height: 1.6;">
+                    Podaj adres email użyty podczas rejestracji. Wyślemy Ci link do zresetowania hasła.
+                </p>
                 <form onsubmit="requestPasswordReset(event)">
                     <div class="form-group">
                         <label>Email:</label>
-                        <input type="email" id="forgotEmail" required>
+                        <input type="email" id="forgotEmail" required autocomplete="email">
                     </div>
                     <div class="btn-group">
                         <button type="submit" class="btn">Wyślij link</button>
@@ -346,68 +543,80 @@
                 </form>
             </div>
             
-            <!-- RESET PASSWORD -->
+            <!-- EKRAN NOWEGO HASŁA -->
             <div id="resetPasswordScreen" class="screen">
-                <h2>Nowe hasło</h2>
+                <h2>Ustaw nowe hasło</h2>
                 <div id="resetPasswordAlert"></div>
                 <form onsubmit="resetPassword(event)">
                     <input type="hidden" id="resetToken">
                     <div class="form-group">
                         <label>Nowe hasło:</label>
-                        <input type="password" id="newPassword" required minlength="6">
+                        <input type="password" id="newPassword" required minlength="6" autocomplete="new-password">
                     </div>
                     <div class="form-group">
-                        <label>Potwierdź:</label>
-                        <input type="password" id="confirmPassword" required minlength="6">
+                        <label>Potwierdź nowe hasło:</label>
+                        <input type="password" id="confirmPassword" required minlength="6" autocomplete="new-password">
                     </div>
                     <button type="submit" class="btn">Zmień hasło</button>
                 </form>
             </div>
             
-            <!-- REGISTER -->
+            <!-- EKRAN REJESTRACJI -->
             <div id="registerScreen" class="screen">
                 <h2>Rejestracja</h2>
                 <div id="registerAlert"></div>
                 <form onsubmit="register(event)">
                     <div class="form-group">
                         <label>Imię:</label>
-                        <input type="text" id="regFirstName" required>
+                        <input type="text" id="regFirstName" required autocomplete="given-name">
                     </div>
                     <div class="form-group">
                         <label>Nazwisko:</label>
-                        <input type="text" id="regLastName" required>
+                        <input type="text" id="regLastName" required autocomplete="family-name">
                     </div>
                     <div class="form-group">
                         <label>Email:</label>
-                        <input type="email" id="regEmail" required>
+                        <input type="email" id="regEmail" required autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label>Hasło (min. 6 znaków):</label>
-                        <input type="password" id="regPassword" required minlength="6">
+                        <input type="password" id="regPassword" required minlength="6" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label>Telefon:</label>
-                        <input type="tel" id="regPhone" required>
+                        <input type="tel" id="regPhone" required autocomplete="tel">
                     </div>
                     <div class="form-group">
                         <label>Dzielnica Warszawy:</label>
                         <select id="regDistrict" required>
                             <option value="">Wybierz...</option>
-                            <option>Bemowo</option><option>Białołęka</option><option>Bielany</option>
-                            <option>Mokotów</option><option>Ochota</option><option>Praga-Południe</option>
-                            <option>Praga-Północ</option><option>Rembertów</option><option>Śródmieście</option>
-                            <option>Targówek</option><option>Ursus</option><option>Ursynów</option>
-                            <option>Wawer</option><option>Wesoła</option><option>Wilanów</option>
-                            <option>Włochy</option><option>Wola</option><option>Żoliborz</option>
+                            <option value="Bemowo">Bemowo</option>
+                            <option value="Białołęka">Białołęka</option>
+                            <option value="Bielany">Bielany</option>
+                            <option value="Mokotów">Mokotów</option>
+                            <option value="Ochota">Ochota</option>
+                            <option value="Praga-Południe">Praga-Południe</option>
+                            <option value="Praga-Północ">Praga-Północ</option>
+                            <option value="Rembertów">Rembertów</option>
+                            <option value="Śródmieście">Śródmieście</option>
+                            <option value="Targówek">Targówek</option>
+                            <option value="Ursus">Ursus</option>
+                            <option value="Ursynów">Ursynów</option>
+                            <option value="Wawer">Wawer</option>
+                            <option value="Wesoła">Wesoła</option>
+                            <option value="Wilanów">Wilanów</option>
+                            <option value="Włochy">Włochy</option>
+                            <option value="Wola">Wola</option>
+                            <option value="Żoliborz">Żoliborz</option>
                         </select>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="regIsDriver">
-                        <label>Jestem kierowcą</label>
+                        <label for="regIsDriver">Jestem kierowcą</label>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="regIsPassenger" checked>
-                        <label>Jestem pasażerem</label>
+                        <label for="regIsPassenger">Jestem pasażerem</label>
                     </div>
                     <div class="btn-group">
                         <button type="submit" class="btn">Zarejestruj</button>
@@ -416,19 +625,19 @@
                 </form>
             </div>
             
-            <!-- CONCERTS -->
+            <!-- EKRAN KONCERTÓW -->
             <div id="concertsScreen" class="screen">
                 <h2>Nadchodzące Koncerty</h2>
                 <div id="concertsList"></div>
             </div>
             
-            <!-- ADD CONCERT -->
+            <!-- EKRAN DODAWANIA KONCERTU -->
             <div id="addConcertScreen" class="screen">
-                <h2>Dodaj Koncert</h2>
+                <h2>Dodaj Nowy Koncert</h2>
                 <div id="addConcertAlert"></div>
                 <form onsubmit="addConcert(event)">
                     <div class="form-group">
-                        <label>Nazwa:</label>
+                        <label>Nazwa koncertu:</label>
                         <input type="text" id="concertName" required>
                     </div>
                     <div class="form-group">
@@ -447,25 +656,25 @@
                         <label>Adres:</label>
                         <textarea id="concertAddress" rows="3" required></textarea>
                     </div>
-                    <button type="submit" class="btn">Dodaj</button>
+                    <button type="submit" class="btn">Dodaj Koncert</button>
                 </form>
             </div>
             
-            <!-- MY RIDES -->
+            <!-- EKRAN MOICH PRZEJAZDÓW -->
             <div id="myRidesScreen" class="screen">
-                <h2>Moje Przejazdy</h2>
+                <h2>Moje Przejazdy jako Kierowca</h2>
                 <div id="myRidesList"></div>
             </div>
             
-            <!-- MY BOOKINGS -->
+            <!-- EKRAN MOICH REZERWACJI -->
             <div id="myBookingsScreen" class="screen">
-                <h2>Moje Rezerwacje</h2>
+                <h2>Moje Rezerwacje jako Pasażer</h2>
                 <div id="myBookingsList"></div>
             </div>
             
-            <!-- PROFILE -->
+            <!-- EKRAN PROFILU -->
             <div id="profileScreen" class="screen">
-                <h2>Profil</h2>
+                <h2>Mój Profil</h2>
                 <div class="user-info" id="userInfo"></div>
                 <div id="profileAlert"></div>
                 <form onsubmit="updateProfile(event)">
@@ -484,58 +693,72 @@
                     <div class="form-group">
                         <label>Dzielnica:</label>
                         <select id="profileDistrict" required>
-                            <option>Bemowo</option><option>Białołęka</option><option>Bielany</option>
-                            <option>Mokotów</option><option>Ochota</option><option>Praga-Południe</option>
-                            <option>Praga-Północ</option><option>Rembertów</option><option>Śródmieście</option>
-                            <option>Targówek</option><option>Ursus</option><option>Ursynów</option>
-                            <option>Wawer</option><option>Wesoła</option><option>Wilanów</option>
-                            <option>Włochy</option><option>Wola</option><option>Żoliborz</option>
+                            <option value="Bemowo">Bemowo</option>
+                            <option value="Białołęka">Białołęka</option>
+                            <option value="Bielany">Bielany</option>
+                            <option value="Mokotów">Mokotów</option>
+                            <option value="Ochota">Ochota</option>
+                            <option value="Praga-Południe">Praga-Południe</option>
+                            <option value="Praga-Północ">Praga-Północ</option>
+                            <option value="Rembertów">Rembertów</option>
+                            <option value="Śródmieście">Śródmieście</option>
+                            <option value="Targówek">Targówek</option>
+                            <option value="Ursus">Ursus</option>
+                            <option value="Ursynów">Ursynów</option>
+                            <option value="Wawer">Wawer</option>
+                            <option value="Wesoła">Wesoła</option>
+                            <option value="Wilanów">Wilanów</option>
+                            <option value="Włochy">Włochy</option>
+                            <option value="Wola">Wola</option>
+                            <option value="Żoliborz">Żoliborz</option>
                         </select>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="profileIsDriver">
-                        <label>Jestem kierowcą</label>
+                        <label for="profileIsDriver">Jestem kierowcą</label>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="profileIsPassenger">
-                        <label>Jestem pasażerem</label>
+                        <label for="profileIsPassenger">Jestem pasażerem</label>
                     </div>
                     
-                    <hr style="margin: 25px 0; border: none; border-top: 2px solid #e0e0e0;">
+                    <hr>
                     
-                    <h3 style="color: #333; font-size: 1.1em; margin-bottom: 15px;">Zmiana hasła</h3>
+                    <h3>Zmiana hasła</h3>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Pozostaw puste jeśli nie chcesz zmieniać hasła</p>
                     <div class="form-group">
                         <label>Nowe hasło (opcjonalnie):</label>
-                        <input type="password" id="profileNewPassword" minlength="6" placeholder="Zostaw puste jeśli nie zmieniasz">
+                        <input type="password" id="profileNewPassword" minlength="6" placeholder="Min. 6 znaków">
                     </div>
                     <div class="form-group">
                         <label>Potwierdź nowe hasło:</label>
-                        <input type="password" id="profileConfirmPassword" minlength="6" placeholder="Zostaw puste jeśli nie zmieniasz">
+                        <input type="password" id="profileConfirmPassword" minlength="6">
                     </div>
                     
-                    <button type="submit" class="btn">Aktualizuj profil</button>
+                    <button type="submit" class="btn">Aktualizuj Profil</button>
                 </form>
             </div>
         </div>
     </div>
     
-    <!-- MODAL: CONCERT DETAILS -->
+    <!-- MODAL SZCZEGÓŁÓW KONCERTU -->
     <div id="concertModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Szczegóły</h2>
-                <button class="modal-close" onclick="closeModal('concertModal')">&times;</button>
+                <h2>Szczegóły Koncertu</h2>
+                <button class="modal-close" onclick="closeModal('concertModal')" aria-label="Zamknij">&times;</button>
             </div>
-            <div id="ridesList"></div>
+            <div id="concertDetails"></div>
+            <div id="ridesList" class="rides-list"></div>
         </div>
     </div>
     
-    <!-- MODAL: ADD RIDE -->
+    <!-- MODAL DODAWANIA PRZEJAZDU -->
     <div id="addRideModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Dodaj Przejazd</h2>
-                <button class="modal-close" onclick="closeModal('addRideModal')">&times;</button>
+                <button class="modal-close" onclick="closeModal('addRideModal')" aria-label="Zamknij">&times;</button>
             </div>
             <div id="addRideAlert"></div>
             <form onsubmit="addRide(event)">
@@ -545,15 +768,27 @@
                     <input type="number" id="rideTotalSeats" min="1" max="8" required>
                 </div>
                 <div class="form-group">
-                    <label>Start:</label>
+                    <label>Punkt startu (dzielnica):</label>
                     <select id="rideStartPoint" required>
                         <option value="">Wybierz...</option>
-                        <option>Bemowo</option><option>Białołęka</option><option>Bielany</option>
-                        <option>Mokotów</option><option>Ochota</option><option>Praga-Południe</option>
-                        <option>Praga-Północ</option><option>Rembertów</option><option>Śródmieście</option>
-                        <option>Targówek</option><option>Ursus</option><option>Ursynów</option>
-                        <option>Wawer</option><option>Wesoła</option><option>Wilanów</option>
-                        <option>Włochy</option><option>Wola</option><option>Żoliborz</option>
+                        <option value="Bemowo">Bemowo</option>
+                        <option value="Białołęka">Białołęka</option>
+                        <option value="Bielany">Bielany</option>
+                        <option value="Mokotów">Mokotów</option>
+                        <option value="Ochota">Ochota</option>
+                        <option value="Praga-Południe">Praga-Południe</option>
+                        <option value="Praga-Północ">Praga-Północ</option>
+                        <option value="Rembertów">Rembertów</option>
+                        <option value="Śródmieście">Śródmieście</option>
+                        <option value="Targówek">Targówek</option>
+                        <option value="Ursus">Ursus</option>
+                        <option value="Ursynów">Ursynów</option>
+                        <option value="Wawer">Wawer</option>
+                        <option value="Wesoła">Wesoła</option>
+                        <option value="Wilanów">Wilanów</option>
+                        <option value="Włochy">Włochy</option>
+                        <option value="Wola">Wola</option>
+                        <option value="Żoliborz">Żoliborz</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -565,24 +800,26 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Komentarz:</label>
-                    <textarea id="rideComment" rows="3" placeholder="np. Auto niepalące, wyjazd 15:00"></textarea>
+                    <label>Komentarz (opcjonalnie):</label>
+                    <textarea id="rideComment" rows="3" placeholder="np. Samochód niepalący, wyjazd o 15:00"></textarea>
                 </div>
-                <button type="submit" class="btn">Dodaj</button>
+                <button type="submit" class="btn">Dodaj Przejazd</button>
             </form>
         </div>
     </div>
     
     <script>
-        // ═══════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════
         // KONFIGURACJA - WKLEJ URL GOOGLE APPS SCRIPT TUTAJ:
-        // ═══════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════
         const API_URL = 'WKLEJ_TUTAJ_URL_SWOJEGO_GOOGLE_APPS_SCRIPT';
         
         let currentUser = null;
         let currentConcertId = null;
         
-        // API CALL
+        // ═════════════════════════════════════════════════════════════════
+        // FUNKCJE POMOCNICZE
+        // ═════════════════════════════════════════════════════════════════
         async function apiCall(action, data = {}) {
             try {
                 const response = await fetch(API_URL, {
@@ -596,7 +833,6 @@
             }
         }
         
-        // HELPERS
         function showAlert(elementId, message, type = 'success') {
             const el = document.getElementById(elementId);
             el.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
@@ -624,7 +860,9 @@
             document.body.style.overflow = '';
         }
         
-        // REGISTER
+        // ═════════════════════════════════════════════════════════════════
+        // REJESTRACJA I LOGOWANIE
+        // ═════════════════════════════════════════════════════════════════
         async function register(e) {
             e.preventDefault();
             const result = await apiCall('register', {
@@ -639,14 +877,13 @@
             });
             
             if (result.success) {
-                showAlert('registerAlert', 'Rejestracja udana! Zaloguj się.', 'success');
+                showAlert('registerAlert', 'Rejestracja udana! Możesz się teraz zalogować.', 'success');
                 setTimeout(() => showScreen('login'), 2000);
             } else {
                 showAlert('registerAlert', result.error, 'error');
             }
         }
         
-        // LOGIN
         async function login(e) {
             e.preventDefault();
             const result = await apiCall('login', {
@@ -659,8 +896,12 @@
                 sessionStorage.setItem('user', JSON.stringify(currentUser));
                 document.getElementById('mainNav').style.display = 'grid';
                 
-                if (currentUser.isDriver) document.getElementById('myRidesBtn').style.display = 'block';
-                if (currentUser.role === 'admin') document.getElementById('adminBtn').style.display = 'block';
+                if (currentUser.isDriver) {
+                    document.getElementById('myRidesBtn').style.display = 'block';
+                }
+                if (currentUser.role === 'admin') {
+                    document.getElementById('adminBtn').style.display = 'block';
+                }
                 
                 showScreen('concerts');
             } else {
@@ -668,7 +909,6 @@
             }
         }
         
-        // LOGOUT
         function logout() {
             currentUser = null;
             sessionStorage.removeItem('user');
@@ -676,7 +916,9 @@
             showScreen('login');
         }
         
-        // FORGOT PASSWORD
+        // ═════════════════════════════════════════════════════════════════
+        // RESETOWANIE HASŁA
+        // ═════════════════════════════════════════════════════════════════
         async function requestPasswordReset(e) {
             e.preventDefault();
             const result = await apiCall('requestPasswordReset', { 
@@ -692,7 +934,6 @@
             }
         }
         
-        // RESET PASSWORD
         async function resetPassword(e) {
             e.preventDefault();
             const newPassword = document.getElementById('newPassword').value;
@@ -719,62 +960,94 @@
             }
         }
         
-        // LOAD CONCERTS
+        // ═════════════════════════════════════════════════════════════════
+        // KONCERTY
+        // ═════════════════════════════════════════════════════════════════
         async function loadConcerts() {
             const list = document.getElementById('concertsList');
             list.innerHTML = '<div class="loader"></div>';
             const result = await apiCall('getConcerts');
             
             if (result.success && result.data.length > 0) {
-                list.innerHTML = result.data.map(c => `
+                list.innerHTML = result.data.map(concert => `
                     <div class="concert-card">
-                        <h3>${c.name}</h3>
-                        <div><span class="info-tag">📅 ${c.date}</span> <span class="info-tag">🕐 ${c.time}</span></div>
-                        <div><span class="info-tag">📍 ${c.location}</span></div>
-                        <p style="margin:10px 0;color:#666;font-size:14px">${c.address}</p>
-                        <button class="btn btn-small" onclick="viewConcertDetails('${c.concertId}')">Zobacz przejazdy</button>
+                        <h3>${concert.name}</h3>
+                        <div class="info-row">
+                            <span class="info-tag">📅 ${concert.date}</span>
+                            <span class="info-tag">🕐 ${concert.time}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-tag">📍 ${concert.location}</span>
+                        </div>
+                        <p style="margin: 10px 0; color: #666; font-size: 14px;">${concert.address}</p>
+                        <button class="btn btn-small" onclick="viewConcertDetails('${concert.concertId}')">
+                            Zobacz przejazdy
+                        </button>
                     </div>
                 `).join('');
             } else {
-                list.innerHTML = '<div class="empty-state">Brak koncertów</div>';
+                list.innerHTML = '<div class="empty-state">Brak nadchodzących koncertów</div>';
             }
         }
         
-        // VIEW CONCERT DETAILS
         async function viewConcertDetails(concertId) {
             currentConcertId = concertId;
             const result = await apiCall('getRides', { concertId });
             const rides = result.success ? result.data : [];
             
             document.getElementById('ridesList').innerHTML = `
-                ${currentUser.isDriver ? `<button class="btn" onclick="openAddRideModal('${concertId}')" style="margin-bottom:20px">+ Dodaj przejazd</button>` : ''}
-                <h3 style="margin-bottom:15px">Dostępne przejazdy</h3>
-                ${rides.length > 0 ? rides.map(r => `
+                ${currentUser.isDriver ? `
+                    <button class="btn" onclick="openAddRideModal('${concertId}')" style="margin-bottom: 20px;">
+                        + Dodaj swój przejazd
+                    </button>
+                ` : ''}
+                
+                <h3 style="margin-bottom: 15px;">Dostępne przejazdy</h3>
+                
+                ${rides.length > 0 ? rides.map(ride => `
                     <div class="ride-card">
-                        <h4>👤 ${r.driver.name}</h4>
-                        <div><span class="info-tag">🚗 ${r.availableSeats}/${r.totalSeats}</span> <span class="info-tag">📍 ${r.startPoint}</span></div>
-                        <div><span class="info-tag">↔️ ${r.direction === 'both' ? 'Tam i z powrotem' : r.direction === 'there' ? 'Tam' : 'Z powrotem'}</span></div>
-                        ${r.comment ? `<p style="margin:10px 0;padding:10px;background:white;border-radius:8px;font-size:14px">💬 ${r.comment}</p>` : ''}
-                        ${r.passengers && r.passengers.length > 0 ? `
+                        <h4>👤 ${ride.driver.name}</h4>
+                        <div class="info-row">
+                            <span class="info-tag">🚗 Miejsca: ${ride.availableSeats}/${ride.totalSeats}</span>
+                            <span class="info-tag">📍 ${ride.startPoint}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-tag">↔️ ${ride.direction === 'both' ? 'Tam i z powrotem' : ride.direction === 'there' ? 'Tylko tam' : 'Tylko z powrotem'}</span>
+                        </div>
+                        ${ride.comment ? `<p style="margin: 10px 0; padding: 10px; background: white; border-radius: 8px; font-size: 14px;">💬 ${ride.comment}</p>` : ''}
+                        
+                        ${ride.passengers && ride.passengers.length > 0 ? `
                             <div class="passenger-list">
-                                <strong style="display:block;margin-bottom:8px">Pasażerowie (${r.passengers.length}):</strong>
-                                ${r.passengers.map(p => `<div class="passenger-item">• ${p.name} <span style="color:#999">(${p.direction === 'both' ? 'tam i z powrotem' : p.direction === 'there' ? 'tam' : 'z powrotem'})</span></div>`).join('')}
+                                <strong style="display: block; margin-bottom: 8px;">Pasażerowie (${ride.passengers.length}):</strong>
+                                ${ride.passengers.map(p => `
+                                    <div class="passenger-item">• ${p.name} <span style="color: #999;">(${p.direction === 'both' ? 'tam i z powrotem' : p.direction === 'there' ? 'tylko tam' : 'tylko z powrotem'})</span></div>
+                                `).join('')}
                             </div>
                         ` : ''}
-                        ${r.availableSeats > 0 && currentUser.userId !== r.driverId ? `<button class="btn btn-small" onclick="bookRide('${r.rideId}')" style="margin-top:10px;width:100%">Zarezerwuj</button>` : r.availableSeats === 0 ? '<p style="color:#999;margin-top:10px;text-align:center">Brak miejsc</p>' : ''}
-                        ${currentUser.userId === r.driverId ? `<button class="btn btn-danger btn-small" onclick="cancelRide('${r.rideId}')" style="margin-top:10px;width:100%">Anuluj</button>` : ''}
-                        <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0">
-                            <p style="font-size:13px;color:#666">📞 ${r.driver.phone}</p>
-                            <p style="font-size:13px;color:#666;word-break:break-all">📧 ${r.driver.email}</p>
+                        
+                        ${ride.availableSeats > 0 && currentUser.userId !== ride.driverId ? `
+                            <button class="btn btn-small" onclick="bookRide('${ride.rideId}')" style="margin-top: 10px; width: 100%;">
+                                Zarezerwuj miejsce
+                            </button>
+                        ` : ride.availableSeats === 0 ? '<p style="color: #999; margin-top: 10px; text-align: center;">Brak wolnych miejsc</p>' : ''}
+                        
+                        ${currentUser.userId === ride.driverId ? `
+                            <button class="btn btn-danger btn-small" onclick="cancelRide('${ride.rideId}')" style="margin-top: 10px; width: 100%;">
+                                Anuluj przejazd
+                            </button>
+                        ` : ''}
+                        
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                            <p style="font-size: 13px; color: #666; margin: 4px 0;">📞 ${ride.driver.phone}</p>
+                            <p style="font-size: 13px; color: #666; margin: 4px 0; word-break: break-all;">📧 ${ride.driver.email}</p>
                         </div>
                     </div>
-                `).join('') : '<div class="empty-state">Brak przejazdów</div>'}
+                `).join('') : '<div class="empty-state">Brak dostępnych przejazdów</div>'}
             `;
             
             openModal('concertModal');
         }
         
-        // ADD CONCERT
         async function addConcert(e) {
             e.preventDefault();
             const result = await apiCall('addConcert', {
@@ -796,14 +1069,15 @@
             }
         }
         
-        // OPEN ADD RIDE MODAL
+        // ═════════════════════════════════════════════════════════════════
+        // PRZEJAZDY
+        // ═════════════════════════════════════════════════════════════════
         function openAddRideModal(concertId) {
             document.getElementById('rideModalConcertId').value = concertId;
             closeModal('concertModal');
             openModal('addRideModal');
         }
         
-        // ADD RIDE
         async function addRide(e) {
             e.preventDefault();
             const result = await apiCall('addRide', {
@@ -827,14 +1101,17 @@
             }
         }
         
-        // BOOK RIDE
         async function bookRide(rideId) {
-            const direction = prompt('Wybierz:\n1 - Tam i z powrotem\n2 - Tylko tam\n3 - Tylko z powrotem\n\nWpisz numer:');
+            const direction = prompt('Wybierz kierunek:\n1 - Tam i z powrotem\n2 - Tylko tam\n3 - Tylko z powrotem\n\nWpisz numer (1, 2 lub 3):');
+            
             let directionValue;
             if (direction === '1') directionValue = 'both';
             else if (direction === '2') directionValue = 'there';
             else if (direction === '3') directionValue = 'back';
-            else { alert('Nieprawidłowy wybór'); return; }
+            else {
+                alert('Nieprawidłowy wybór');
+                return;
+            }
             
             const result = await apiCall('bookRide', {
                 userId: currentUser.userId,
@@ -843,82 +1120,116 @@
             });
             
             if (result.success) {
-                alert('Zarezerwowano!');
+                alert('Miejsce zarezerwowane!');
                 viewConcertDetails(currentConcertId);
             } else {
                 alert(result.error);
             }
         }
         
-        // LOAD MY RIDES
         async function loadMyRides() {
             const list = document.getElementById('myRidesList');
             list.innerHTML = '<div class="loader"></div>';
             const result = await apiCall('getMyRides', { userId: currentUser.userId });
             
             if (result.success && result.data.length > 0) {
-                list.innerHTML = result.data.map(r => `
+                list.innerHTML = result.data.map(ride => `
                     <div class="ride-card">
-                        <h3>${r.concert.name}</h3>
-                        <div><span class="info-tag">📅 ${r.concert.date}</span> <span class="info-tag">📍 ${r.concert.location}</span></div>
-                        <div><span class="info-tag">🚗 ${r.availableSeats}/${r.totalSeats}</span> <span class="info-tag">Start: ${r.startPoint}</span></div>
-                        <div><span class="info-tag">${r.status === 'active' ? '✅ Aktywny' : '❌ Anulowany'}</span></div>
+                        <h3>${ride.concert.name}</h3>
+                        <div class="info-row">
+                            <span class="info-tag">📅 ${ride.concert.date}</span>
+                            <span class="info-tag">📍 ${ride.concert.location}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-tag">🚗 Miejsca: ${ride.availableSeats}/${ride.totalSeats}</span>
+                            <span class="info-tag">Start: ${ride.startPoint}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-tag">Status: ${ride.status === 'active' ? '✅ Aktywny' : '❌ Anulowany'}</span>
+                        </div>
                     </div>
                 `).join('');
             } else {
-                list.innerHTML = '<div class="empty-state">Brak przejazdów</div>';
+                list.innerHTML = '<div class="empty-state">Nie masz jeszcze żadnych przejazdów</div>';
             }
         }
         
-        // LOAD MY BOOKINGS
         async function loadMyBookings() {
             const list = document.getElementById('myBookingsList');
             list.innerHTML = '<div class="loader"></div>';
             const result = await apiCall('getMyBookings', { userId: currentUser.userId });
             
             if (result.success && result.data.length > 0) {
-                list.innerHTML = result.data.map(b => `
+                list.innerHTML = result.data.map(booking => `
                     <div class="ride-card">
-                        <h3>${b.concert.name}</h3>
-                        <div><span class="info-tag">📅 ${b.concert.date}</span> <span class="info-tag">📍 ${b.concert.location}</span></div>
-                        <h4 style="margin-top:15px">👤 ${b.driver.name}</h4>
-                        <div style="background:white;padding:12px;border-radius:8px;margin:10px 0">
-                            <p style="font-size:13px;color:#666">📞 ${b.driver.phone}</p>
-                            <p style="font-size:13px;color:#666;word-break:break-all">📧 ${b.driver.email}</p>
+                        <h3>${booking.concert.name}</h3>
+                        <div class="info-row">
+                            <span class="info-tag">📅 ${booking.concert.date}</span>
+                            <span class="info-tag">📍 ${booking.concert.location}</span>
                         </div>
-                        <div><span class="info-tag">Start: ${b.ride.startPoint}</span> <span class="info-tag">${b.direction === 'both' ? 'Tam i z powrotem' : b.direction === 'there' ? 'Tam' : 'Z powrotem'}</span></div>
-                        ${b.ride.comment ? `<p style="margin:10px 0;padding:10px;background:white;border-radius:8px;font-size:14px">💬 ${b.ride.comment}</p>` : ''}
-                        <button class="btn btn-danger btn-small" onclick="cancelBooking('${b.bookingId}')" style="margin-top:10px;width:100%">Anuluj</button>
+                        <h4 style="margin-top: 15px;">Kierowca: ${booking.driver.name}</h4>
+                        <div style="background: white; padding: 12px; border-radius: 8px; margin: 10px 0;">
+                            <p style="font-size: 13px; color: #666; margin: 4px 0;">📞 ${booking.driver.phone}</p>
+                            <p style="font-size: 13px; color: #666; margin: 4px 0; word-break: break-all;">📧 ${booking.driver.email}</p>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-tag">Start: ${booking.ride.startPoint}</span>
+                            <span class="info-tag">${booking.direction === 'both' ? 'Tam i z powrotem' : booking.direction === 'there' ? 'Tylko tam' : 'Tylko z powrotem'}</span>
+                        </div>
+                        ${booking.ride.comment ? `<p style="margin: 10px 0; padding: 10px; background: white; border-radius: 8px; font-size: 14px;">💬 ${booking.ride.comment}</p>` : ''}
+                        <button class="btn btn-danger btn-small" onclick="cancelBooking('${booking.bookingId}')" style="margin-top: 10px; width: 100%;">
+                            Anuluj rezerwację
+                        </button>
                     </div>
                 `).join('');
             } else {
-                list.innerHTML = '<div class="empty-state">Brak rezerwacji</div>';
+                list.innerHTML = '<div class="empty-state">Nie masz jeszcze żadnych rezerwacji</div>';
             }
         }
         
-        // CANCEL BOOKING
         async function cancelBooking(bookingId) {
-            if (!confirm('Anulować rezerwację?')) return;
-            const result = await apiCall('cancelBooking', { userId: currentUser.userId, bookingId });
-            if (result.success) { alert('Anulowano'); loadMyBookings(); }
-            else alert(result.error);
+            if (!confirm('Czy na pewno chcesz anulować tę rezerwację?')) return;
+            
+            const result = await apiCall('cancelBooking', {
+                userId: currentUser.userId,
+                bookingId: bookingId
+            });
+            
+            if (result.success) {
+                alert('Rezerwacja anulowana');
+                loadMyBookings();
+            } else {
+                alert(result.error);
+            }
         }
         
-        // CANCEL RIDE
         async function cancelRide(rideId) {
-            if (!confirm('Anulować przejazd? Pasażerowie zostaną powiadomieni.')) return;
-            const result = await apiCall('cancelRide', { userId: currentUser.userId, rideId });
-            if (result.success) { alert('Anulowano'); closeModal('concertModal'); loadMyRides(); }
-            else alert(result.error);
+            if (!confirm('Czy na pewno chcesz anulować ten przejazd? Pasażerowie zostaną powiadomieni.')) return;
+            
+            const result = await apiCall('cancelRide', {
+                userId: currentUser.userId,
+                rideId: rideId
+            });
+            
+            if (result.success) {
+                alert('Przejazd anulowany');
+                closeModal('concertModal');
+                loadMyRides();
+            } else {
+                alert(result.error);
+            }
         }
         
-        // LOAD PROFILE
+        // ═════════════════════════════════════════════════════════════════
+        // PROFIL
+        // ═════════════════════════════════════════════════════════════════
         function loadProfile() {
             document.getElementById('userInfo').innerHTML = `
-                <strong>Zalogowany:</strong> ${currentUser.firstName} ${currentUser.lastName}<br>
+                <strong>Zalogowany jako:</strong> ${currentUser.firstName} ${currentUser.lastName}<br>
                 <strong>Email:</strong> ${currentUser.email}<br>
                 <strong>Rola:</strong> ${currentUser.role === 'admin' ? 'Administrator' : 'Użytkownik'}
             `;
+            
             document.getElementById('profileFirstName').value = currentUser.firstName;
             document.getElementById('profileLastName').value = currentUser.lastName;
             document.getElementById('profilePhone').value = currentUser.phone;
@@ -927,7 +1238,6 @@
             document.getElementById('profileIsPassenger').checked = currentUser.isPassenger;
         }
         
-        // UPDATE PROFILE
         async function updateProfile(e) {
             e.preventDefault();
             
@@ -955,47 +1265,64 @@
                 district: document.getElementById('profileDistrict').value,
                 isDriver: document.getElementById('profileIsDriver').checked,
                 isPassenger: document.getElementById('profileIsPassenger').checked,
-                newPassword: newPassword || null  // Wyślij tylko jeśli wypełnione
+                newPassword: newPassword || null
             });
             
             if (result.success) {
-                Object.assign(currentUser, {
-                    firstName: document.getElementById('profileFirstName').value,
-                    lastName: document.getElementById('profileLastName').value,
-                    phone: document.getElementById('profilePhone').value,
-                    district: document.getElementById('profileDistrict').value,
-                    isDriver: document.getElementById('profileIsDriver').checked,
-                    isPassenger: document.getElementById('profileIsPassenger').checked
-                });
+                currentUser.firstName = document.getElementById('profileFirstName').value;
+                currentUser.lastName = document.getElementById('profileLastName').value;
+                currentUser.phone = document.getElementById('profilePhone').value;
+                currentUser.district = document.getElementById('profileDistrict').value;
+                currentUser.isDriver = document.getElementById('profileIsDriver').checked;
+                currentUser.isPassenger = document.getElementById('profileIsPassenger').checked;
+                
                 sessionStorage.setItem('user', JSON.stringify(currentUser));
-                showAlert('profileAlert', newPassword ? 'Profil i hasło zaktualizowane!' : 'Profil zaktualizowany!', 'success');
+                
+                const message = newPassword ? 'Profil i hasło zaktualizowane!' : 'Profil zaktualizowany!';
+                showAlert('profileAlert', message, 'success');
                 
                 // Wyczyść pola hasła
                 document.getElementById('profileNewPassword').value = '';
                 document.getElementById('profileConfirmPassword').value = '';
                 
-                document.getElementById('myRidesBtn').style.display = currentUser.isDriver ? 'block' : 'none';
+                if (currentUser.isDriver) {
+                    document.getElementById('myRidesBtn').style.display = 'block';
+                } else {
+                    document.getElementById('myRidesBtn').style.display = 'none';
+                }
             } else {
                 showAlert('profileAlert', result.error, 'error');
             }
         }
         
-        // INIT
+        // ═════════════════════════════════════════════════════════════════
+        // INICJALIZACJA
+        // ═════════════════════════════════════════════════════════════════
         window.onload = function() {
+            // Sprawdź czy jest token resetujący w URL
             const urlParams = new URLSearchParams(window.location.search);
             const resetToken = urlParams.get('reset');
+            
             if (resetToken) {
                 document.getElementById('resetToken').value = resetToken;
                 showScreen('resetPassword');
                 return;
             }
             
+            // Sprawdź zapisaną sesję
             const savedUser = sessionStorage.getItem('user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 document.getElementById('mainNav').style.display = 'grid';
-                if (currentUser.isDriver) document.getElementById('myRidesBtn').style.display = 'block';
-                if (currentUser.role === 'admin') document.getElementById('adminBtn').style.display = 'block';
+                
+                if (currentUser.isDriver) {
+                    document.getElementById('myRidesBtn').style.display = 'block';
+                }
+                
+                if (currentUser.role === 'admin') {
+                    document.getElementById('adminBtn').style.display = 'block';
+                }
+                
                 showScreen('concerts');
             }
         };
