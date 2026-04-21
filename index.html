@@ -847,15 +847,15 @@ udostępniane żadnym innym podmiotom.</p>
                 <form onsubmit="changePassword(event)">
                     <div class="form-group">
                         <label>Obecne hasło:</label>
-                        <input type="password" id="currentPassword" required="" autocomplete="current-password">
+                        <input type="password" id="profileCurrentPassword" required="" autocomplete="current-password">
                     </div>
                     <div class="form-group">
                         <label>Nowe hasło:</label>
-                        <input type="password" id="newPassword" required="" minlength="6" autocomplete="new-password">
+                        <input type="password" id="profileNewPassword" required="" minlength="6" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label>Powtórz nowe hasło:</label>
-                        <input type="password" id="newPasswordConfirm" required="" minlength="6" autocomplete="new-password">
+                        <input type="password" id="profileNewPasswordConfirm" required="" minlength="6" autocomplete="new-password">
                     </div>
                     <button type="submit" class="btn btn-secondary">🔒 Zmień hasło</button>
                 </form>
@@ -925,7 +925,7 @@ udostępniane żadnym innym podmiotom.</p>
         // ═══════════════════════════════════════════════════════════════
         // KONFIGURACJA - WKLEJ URL GOOGLE APPS SCRIPT TUTAJ:
         // ═══════════════════════════════════════════════════════════════
-        const API_URL = 'https://script.google.com/macros/s/AKfycby7FUkB4u21WdpXRtJ-ddByFyjyBxsqB4RGBT61Zk8MXMBsk4u7r56Y9NjMJPNRE3FclA/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyMONAYSqmtpYMhpmPPfqqKHA0SPeD4z2L9FLtp_Td2un9meSKF9eXCOwSUmptIkN4H6w/exec';
         
         let currentUser = null;
         let currentConcertId = null;
@@ -1421,9 +1421,9 @@ udostępniane żadnym innym podmiotom.</p>
         // CHANGE PASSWORD
         async function changePassword(e) {
             e.preventDefault();
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const newPasswordConfirm = document.getElementById('newPasswordConfirm').value;
+            const currentPassword = document.getElementById('profileCurrentPassword').value;
+            const newPassword = document.getElementById('profileNewPassword').value;
+            const newPasswordConfirm = document.getElementById('profileNewPasswordConfirm').value;
 
             if (newPassword.length < 6) {
                 showAlert('changePasswordAlert', 'Nowe hasło musi mieć minimum 6 znaków.', 'error');
@@ -1446,9 +1446,9 @@ udostępniane żadnym innym podmiotom.</p>
 
             if (result.success) {
                 showAlert('changePasswordAlert', '✅ Hasło zostało zmienione.', 'success');
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('newPasswordConfirm').value = '';
+                document.getElementById('profileCurrentPassword').value = '';
+                document.getElementById('profileNewPassword').value = '';
+                document.getElementById('profileNewPasswordConfirm').value = '';
             } else {
                 showAlert('changePasswordAlert', result.error || 'Nie udało się zmienić hasła.', 'error');
             }
