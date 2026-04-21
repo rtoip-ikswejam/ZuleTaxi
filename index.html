@@ -925,7 +925,7 @@ udostępniane żadnym innym podmiotom.</p>
         // ═══════════════════════════════════════════════════════════════
         // KONFIGURACJA - WKLEJ URL GOOGLE APPS SCRIPT TUTAJ:
         // ═══════════════════════════════════════════════════════════════
-        const API_URL = 'https://script.google.com/macros/s/AKfycby7FUkB4u21WdpXRtJ-ddByFyjyBxsqB4RGBT61Zk8MXMBsk4u7r56Y9NjMJPNRE3FclA/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyMONAYSqmtpYMhpmPPfqqKHA0SPeD4z2L9FLtp_Td2un9meSKF9eXCOwSUmptIkN4H6w/exec';
         
         let currentUser = null;
         let currentConcertId = null;
@@ -1083,6 +1083,9 @@ udostępniane żadnym innym podmiotom.</p>
                 }, 2000);
             } else {
                 showAlert('resetPasswordAlert', result.error, 'error');
+                // Wyczyść URL także przy błędzie (zły/wygasły token), żeby po odświeżeniu
+                // strony nie wracać już na ten ekran.
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
         
@@ -1458,13 +1461,21 @@ udostępniane żadnym innym podmiotom.</p>
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const resetToken = urlParams.get('reset');
-            if (resetToken) {
+            const savedUser = sessionStorage.getItem('user');
+
+            // Jeśli user jest już zalogowany, zignoruj token resetu i wyczyść URL
+            // (token mógł zostać w zakładce / historii po starym resecie).
+            if (resetToken && !savedUser) {
                 document.getElementById('resetToken').value = resetToken;
                 showScreen('resetPassword');
                 return;
             }
-            
-            const savedUser = sessionStorage.getItem('user');
+
+            // Token obecny ale user zalogowany → po cichu wyczyść URL
+            if (resetToken && savedUser) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
                 document.getElementById('hamburgerBtn').style.display = 'flex';
