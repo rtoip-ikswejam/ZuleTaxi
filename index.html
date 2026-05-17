@@ -1422,6 +1422,7 @@ udostępniane żadnym innym podmiotom.</p>
             if (result.success) {
                 showAlert('addRideAlert', 'Przejazd dodany!', 'success');
                 e.target.reset();
+                loadConcerts();
                 setTimeout(() => {
                     closeModal('addRideModal');
                     viewConcertDetails(document.getElementById('rideModalConcertId').value);
@@ -1448,6 +1449,7 @@ udostępniane żadnym innym podmiotom.</p>
             
             if (result.success) {
                 alert('Zarezerwowano!');
+                loadConcerts();
                 viewConcertDetails(currentConcertId);
             } else {
                 alert(result.error);
@@ -1477,6 +1479,7 @@ udostępniane żadnym innym podmiotom.</p>
             });
             if (result.success) {
                 showAlert('editRideAlert', '✅ Przejazd zaktualizowany!', 'success');
+                loadConcerts();
                 setTimeout(() => { closeModal('editRideModal'); loadMyRides(); }, 1500);
             } else {
                 showAlert('editRideAlert', result.error, 'error');
@@ -1534,7 +1537,7 @@ udostępniane żadnym innym podmiotom.</p>
         async function cancelBooking(bookingId) {
             if (!confirm('Anulować rezerwację?')) return;
             const result = await apiCall('cancelBooking', { userId: currentUser.userId, bookingId });
-            if (result.success) { alert('Anulowano'); loadMyBookings(); }
+            if (result.success) { alert('Anulowano'); loadConcerts(); loadMyBookings(); }
             else alert(result.error);
         }
         
@@ -1542,7 +1545,7 @@ udostępniane żadnym innym podmiotom.</p>
         async function cancelRide(rideId) {
             if (!confirm('Anulować przejazd? Pasażerowie zostaną powiadomieni.')) return;
             const result = await apiCall('cancelRide', { userId: currentUser.userId, rideId });
-            if (result.success) { alert('Anulowano'); closeModal('concertModal'); loadMyRides(); }
+            if (result.success) { alert('Anulowano'); closeModal('concertModal'); loadConcerts(); loadMyRides(); }
             else alert(result.error);
         }
 
