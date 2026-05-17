@@ -1154,7 +1154,7 @@ udostępniane żadnym innym podmiotom.</p>
         async function register(e) {
             e.preventDefault();
             const result = await apiCall('register', {
-                email: document.getElementById('regEmail').value,
+                email: document.getElementById('regEmail').value.trim().toLowerCase(),
                 password: document.getElementById('regPassword').value,
                 firstName: document.getElementById('regFirstName').value,
                 lastName: document.getElementById('regLastName').value,
@@ -1176,7 +1176,7 @@ udostępniane żadnym innym podmiotom.</p>
         async function login(e) {
             e.preventDefault();
             const result = await apiCall('login', {
-                email: document.getElementById('loginEmail').value,
+                email: document.getElementById('loginEmail').value.trim().toLowerCase(),
                 password: document.getElementById('loginPassword').value
             });
             
@@ -1206,7 +1206,7 @@ udostępniane żadnym innym podmiotom.</p>
         async function requestPasswordReset(e) {
             e.preventDefault();
             const result = await apiCall('requestPasswordReset', { 
-                email: document.getElementById('forgotEmail').value,
+                email: document.getElementById('forgotEmail').value.trim().toLowerCase(),
                 appUrl: window.location.href.split('?')[0]
             });
             
