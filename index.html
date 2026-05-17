@@ -575,7 +575,144 @@
     .link { color: var(--black); text-decoration: none; font-weight: 700; border-bottom: 2px solid var(--yellow); }
     .text-center { text-align: center; }
 
+    /* ── SEATS WIDGET (Dostępność miejsc) ── */
+    .seats-widget {
+        background: var(--white);
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1.5px solid var(--gray-mid);
+        margin: 10px 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .seats-widget.free   { border-color: #97C459; background: #F5FBED; }
+    .seats-widget.last   { border-color: #EF9F27; background: #FEF6E7; }
+    .seats-widget.full   { border-color: var(--gray-mid); background: var(--gray-light); }
+    .seats-icons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        align-items: center;
+        flex: 1;
+        min-width: 0;
+    }
+    .seats-icons svg { flex-shrink: 0; display: block; }
+    .seats-count {
+        text-align: right;
+        flex-shrink: 0;
+        padding-left: 8px;
+        border-left: 1.5px solid var(--gray-mid);
+    }
+    .seats-widget.free .seats-count { border-left-color: #C0DD97; }
+    .seats-widget.last .seats-count { border-left-color: #FAC775; }
+    .seats-number {
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1;
+        font-family: 'Bebas Neue', sans-serif;
+        letter-spacing: 1px;
+    }
+    .seats-widget.free .seats-number { color: #27500A; }
+    .seats-widget.last .seats-number { color: #633806; }
+    .seats-widget.full .seats-number { color: var(--text-muted); }
+    .seats-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: var(--text-muted);
+        margin-top: 4px;
+        font-weight: 800;
+    }
+    .seats-widget.free .seats-label { color: #3B6D11; }
+    .seats-widget.last .seats-label { color: #854F0B; }
+
+    /* ── CONCERT SUMMARY (Podsumowanie przejazdów na karcie koncertu) ── */
+    .concert-summary {
+        background: var(--white);
+        border: 1.5px solid var(--gray-mid);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin: 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .concert-summary.free { border-color: #97C459; background: #F5FBED; }
+    .concert-summary.full { border-color: var(--gray-mid); background: var(--gray-light); }
+    .concert-summary.none { border-color: var(--gray-mid); background: var(--gray-light); }
+    .cs-stat {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-weight: 800;
+        color: var(--black);
+    }
+    .cs-stat svg { flex-shrink: 0; display: block; }
+    .cs-mult {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 19px;
+        letter-spacing: 1px;
+        line-height: 1;
+    }
+    .cs-message {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-muted);
+        flex: 1 1 100%;
+        margin-top: 2px;
+    }
+    .concert-summary.free .cs-message { color: #3B6D11; }
+    .concert-summary.full .cs-message,
+    .concert-summary.none .cs-message { color: var(--text-muted); }
+
     /* ── RESPONSIVE ── */
+    /* MOBILE FIRST: poprawki dla najmniejszych ekranów (<480px) */
+    @media (max-width: 479px) {
+        .content { padding: 18px 14px 50px; }
+        .concert-card, .ride-card {
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .concert-card h3, .ride-card h3 { font-size: 1.1em; }
+        .info-tag {
+            font-size: 12px;
+            padding: 4px 9px;
+            margin: 2px 2px 2px 0;
+        }
+        .modal { padding: 12px 6px; }
+        .modal-content {
+            padding: 18px 16px;
+            border-radius: 14px;
+        }
+        .modal-header h2 { font-size: 1.3em; }
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+        }
+        .passenger-list { padding: 10px; }
+        .passenger-item { font-size: 13px; padding: 6px 0; }
+        .header { padding: 12px 16px 0; }
+        .header-text h1 { font-size: 1.5em; letter-spacing: 1.5px; }
+        .header-text p { font-size: 0.72em; }
+        .header-logo { width: 46px; height: 46px; }
+        .seats-widget { padding: 10px 12px; gap: 10px; }
+        .seats-icons { gap: 4px; }
+        .seats-icons svg { width: 22px; height: 22px; }
+        .seats-number { font-size: 22px; }
+        .concert-summary { padding: 8px 12px; gap: 10px; }
+        .concert-summary svg { width: 20px; height: 20px; }
+        .cs-mult { font-size: 17px; }
+        .cs-message { font-size: 12px; }
+        .user-info { padding: 14px; font-size: 13px; }
+        .btn { padding: 12px 18px; font-size: 14px; }
+        h2 { font-size: 1.4em; margin-bottom: 16px; }
+    }
+
     @media (min-width: 768px) {
         .container { border-radius: 20px; margin: 20px auto; min-height: calc(100vh - 40px); }
         .header { border-radius: 20px 20px 0 0; padding: 20px 30px 0; }
@@ -585,15 +722,14 @@
         .btn-group { flex-direction: row; }
         .btn { width: auto; }
         .login-hero img { width: 150px; height: 150px; }
-    }
-        .header-logo { width: 80px; height: 80px; }
+        .seats-icons svg { width: 26px; height: 26px; }
     }
 
     @media (min-width: 1024px) {
         .header-top { gap: 20px; }
         .header-logo { width: 80px; height: 80px; }
     }
-</style>
+    </style>
 </head>
 <body>
     <div class="container">
@@ -1089,20 +1225,109 @@ udostępniane żadnym innym podmiotom.</p>
             }
         }
         
+        // CONCERT SUMMARY — agregat: ile aut + ile wolnych miejsc na karcie koncertu
+        function renderConcertSummary(carsCount, freeSeats) {
+            if (carsCount === 0) {
+                return `<div class="concert-summary none">
+                    <div class="cs-stat" style="color:var(--text-muted)">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="#6B6B6B" d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-5h14v5zM7.5 13c.83 0 1.5.67 1.5 1.5S8.33 16 7.5 16 6 15.33 6 14.5 6.67 13 7.5 13zm9 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5z"/></svg>
+                        <span class="cs-mult">× 0</span>
+                    </div>
+                    <div class="cs-message">Brak przejazdów na ten koncert</div>
+                </div>`;
+            }
+
+            const hasSeats = freeSeats > 0;
+            const cls = hasSeats ? 'free' : 'full';
+            const personColor = hasSeats ? '#97C459' : '#888780';
+            const message = hasSeats
+                ? (carsCount === 1
+                    ? `Są jeszcze wolne miejsca`
+                    : `Są jeszcze wolne miejsca`)
+                : 'Brak na razie wolnych miejsc';
+
+            const carIcon = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="#1A1A1A" d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.04 3H5.81l1.04-3zM19 17H5v-5h14v5zM7.5 13c.83 0 1.5.67 1.5 1.5S8.33 16 7.5 16 6 15.33 6 14.5 6.67 13 7.5 13zm9 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5z"/></svg>`;
+            const personIcon = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="${personColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+
+            const a11y = `${carsCount} ${carsCount === 1 ? 'samochód' : 'samochodów'}, ${freeSeats} wolnych miejsc łącznie`;
+
+            return `<div class="concert-summary ${cls}" role="img" aria-label="${a11y}">
+                <div class="cs-stat" title="Liczba przejazdów">${carIcon}<span class="cs-mult">× ${carsCount}</span></div>
+                <div class="cs-stat" title="Wolne miejsca łącznie">${personIcon}<span class="cs-mult" style="color:${hasSeats ? '#27500A' : '#6B6B6B'}">× ${freeSeats}</span></div>
+                <div class="cs-message">${message}</div>
+            </div>`;
+        }
+
+        // SEATS WIDGET — ikonki ludzików + liczba wolnych miejsc
+        function renderSeatsWidget(available, total) {
+            const occupied = Math.max(0, total - available);
+            let cls, label, fillFree;
+            if (available === 0) {
+                cls = 'full';
+                label = 'KOMPLET';
+                fillFree = '#888780';
+            } else if (available <= 2) {
+                cls = 'last';
+                label = available === 1 ? 'OSTATNIE' : 'WOLNE';
+                fillFree = '#EF9F27';
+            } else {
+                cls = 'free';
+                label = 'WOLNE';
+                fillFree = '#97C459';
+            }
+
+            // ikonka "zajęte miejsce" — wypełniony ludzik (szary)
+            const occupiedIcon = `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="#6B6B6B" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+            // ikonka "wolne miejsce" — pusty kontur ludzika (kolor zależny od stanu)
+            const freeIcon = `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="none" stroke="${fillFree}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+
+            let icons = '';
+            for (let i = 0; i < occupied; i++) icons += occupiedIcon;
+            for (let i = 0; i < available; i++) icons += freeIcon;
+
+            const a11y = `Dostępne miejsca: ${available} z ${total}`;
+            return `
+                <div class="seats-widget ${cls}" role="img" aria-label="${a11y}">
+                    <div class="seats-icons">${icons}</div>
+                    <div class="seats-count">
+                        <div class="seats-number">${available}</div>
+                        <div class="seats-label">${label}</div>
+                    </div>
+                </div>
+            `;
+        }
+
         // LOAD CONCERTS
         async function loadConcerts() {
             const list = document.getElementById('concertsList');
             list.innerHTML = '<div class="loader"></div>';
             const result = await apiCall('getConcerts');
-            
+
             if (result.success && result.data.length > 0) {
-                list.innerHTML = result.data.map(c => `
+                const concerts = result.data;
+
+                // Pobierz przejazdy dla wszystkich koncertów równolegle (jedna runda zapytań).
+                // Skip wywołań w razie błędu pojedynczego koncertu - reszta i tak się załaduje.
+                const ridesResults = await Promise.all(
+                    concerts.map(c => apiCall('getRides', { concertId: c.concertId }).catch(() => ({ success: false })))
+                );
+
+                list.innerHTML = concerts.map((c, idx) => {
+                    const ridesData = ridesResults[idx];
+                    const allRides = (ridesData && ridesData.success && Array.isArray(ridesData.data)) ? ridesData.data : [];
+                    // licz tylko aktywne przejazdy (jeśli backend zwraca też anulowane)
+                    const activeRides = allRides.filter(r => !r.status || r.status === 'active');
+                    const carsCount = activeRides.length;
+                    const freeSeats = activeRides.reduce((sum, r) => sum + (parseInt(r.availableSeats, 10) || 0), 0);
+
+                    return `
                     <div class="concert-card">
                         <h3>${c.name}</h3>
                         <div><span class="info-tag">📅 ${c.date}</span> <span class="info-tag">🕐 ${c.time}</span></div>
                         <div><span class="info-tag">📍 ${c.location}</span></div>
                         <p style="margin:10px 0;color:#666;font-size:14px">${c.address}</p>
                         ${c.artistUrl ? `<div style="margin:8px 0"><a href="${c.artistUrl}" target="_blank" rel="noopener noreferrer" class="info-tag" style="text-decoration:none">🎵 Strona wykonawcy</a></div>` : ''}
+                        ${renderConcertSummary(carsCount, freeSeats)}
                         <div class="admin-actions">
                             <button class="btn btn-small" onclick="viewConcertDetails('${c.concertId}')">🚗 Zobacz przejazdy</button>
                             ${currentUser && currentUser.role === 'admin' ? `
@@ -1111,7 +1336,8 @@ udostępniane żadnym innym podmiotom.</p>
                             ` : ''}
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             } else {
                 list.innerHTML = '<div class="empty-state">Brak koncertów</div>';
             }
@@ -1129,8 +1355,8 @@ udostępniane żadnym innym podmiotom.</p>
                 ${rides.length > 0 ? rides.map(r => `
                     <div class="ride-card">
                         <h4>👤 ${r.driver.name}</h4>
-                        <div><span class="info-tag">🚗 ${r.availableSeats}/${r.totalSeats}</span> <span class="info-tag">📍 ${r.startPoint}</span></div>
-                        <div><span class="info-tag">↔️ ${r.direction === 'both' ? 'Tam i z powrotem' : r.direction === 'there' ? 'Tam' : 'Z powrotem'}</span></div>
+                        ${renderSeatsWidget(r.availableSeats, r.totalSeats)}
+                        <div><span class="info-tag">📍 ${r.startPoint}</span> <span class="info-tag">↔️ ${r.direction === 'both' ? 'Tam i z powrotem' : r.direction === 'there' ? 'Tam' : 'Z powrotem'}</span></div>
                         ${r.comment ? `<p style="margin:10px 0;padding:10px;background:white;border-radius:8px;font-size:14px">💬 ${r.comment}</p>` : ''}
                         ${r.passengers && r.passengers.length > 0 ? `
                             <div class="passenger-list">
@@ -1138,7 +1364,7 @@ udostępniane żadnym innym podmiotom.</p>
                                 ${r.passengers.map(p => `<div class="passenger-item">• ${p.name} <span style="color:#999">(${p.direction === 'both' ? 'tam i z powrotem' : p.direction === 'there' ? 'tam' : 'z powrotem'})</span></div>`).join('')}
                             </div>
                         ` : ''}
-                        ${r.availableSeats > 0 && currentUser.userId !== r.driverId ? `<button class="btn btn-small" onclick="bookRide('${r.rideId}')" style="margin-top:10px;width:100%">Zarezerwuj</button>` : r.availableSeats === 0 ? '<p style="color:#999;margin-top:10px;text-align:center">Brak miejsc</p>' : ''}
+                        ${r.availableSeats > 0 && currentUser.userId !== r.driverId ? `<button class="btn btn-small" onclick="bookRide('${r.rideId}')" style="margin-top:10px;width:100%">Zarezerwuj</button>` : ''}
                         ${currentUser.userId === r.driverId ? `<button class="btn btn-danger btn-small" onclick="cancelRide('${r.rideId}')" style="margin-top:10px;width:100%">Anuluj</button>` : ''}
                         <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0">
                             <p style="font-size:13px;color:#666">📞 ${r.driver.phone}</p>
@@ -1268,8 +1494,8 @@ udostępniane żadnym innym podmiotom.</p>
                     <div class="ride-card">
                         <h3>${r.concert.name}</h3>
                         <div><span class="info-tag">📅 ${r.concert.date}</span> <span class="info-tag">📍 ${r.concert.location}</span></div>
-                        <div><span class="info-tag">🚗 ${r.availableSeats}/${r.totalSeats}</span> <span class="info-tag">Start: ${r.startPoint}</span></div>
-                        <div><span class="info-tag">${r.status === 'active' ? '✅ Aktywny' : '❌ Anulowany'}</span></div>
+                        ${r.status === 'active' ? renderSeatsWidget(r.availableSeats, r.totalSeats) : ''}
+                        <div><span class="info-tag">Start: ${r.startPoint}</span> <span class="info-tag">${r.status === 'active' ? '✅ Aktywny' : '❌ Anulowany'}</span></div>
                         ${r.status === 'active' ? `<button class="btn btn-small btn-secondary" onclick="openEditRide(${JSON.stringify(r).split('"').join('&quot;')})" style="margin-top:10px;width:100%">✏️ Edytuj przejazd</button>` : ''}
                     </div>
                 `).join('');
