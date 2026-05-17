@@ -139,6 +139,9 @@
     }
     .nav.open { display: flex; }
 
+    /* Nawigacja ukryta dla niezalogowanych (nadpisuje wszystkie pozostałe reguły, łącznie z desktopowym !important) */
+    .nav.hidden { display: none !important; }
+
     .nav button {
         background: transparent;
         border: none;
@@ -750,7 +753,7 @@
                     <span></span><span></span><span></span>
                 </button>
             </div>
-            <div class="nav" id="mainNav">
+            <div class="nav hidden" id="mainNav">
                 <button onclick="showScreen('concerts')">🎵 Koncerty</button>
                 <button onclick="showScreen('myRides')" id="myRidesBtn" style="display: none;">🚗 Moje Przejazdy</button>
                 <button onclick="showScreen('myBookings')">📋 Rezerwacje</button>
@@ -1099,6 +1102,28 @@ udostępniane żadnym innym podmiotom.</p>
             btn.classList.toggle('open');
         }
 
+        // Pokazuje / ukrywa nawigację i hamburger w zależności od tego czy ktoś jest zalogowany.
+        // Wywoływana przy logowaniu, wylogowaniu, ładowaniu strony i przejściu na ekran login/register.
+        function setLoggedInUI(loggedIn) {
+            const nav = document.getElementById('mainNav');
+            const burger = document.getElementById('hamburgerBtn');
+            if (loggedIn) {
+                nav.classList.remove('hidden');
+                burger.style.display = 'flex';
+                // Role-specific guziki (driver/admin) ustawia osobny kod — tu tylko bazowa widoczność.
+            } else {
+                nav.classList.add('hidden');
+                nav.classList.remove('open');
+                burger.style.display = 'none';
+                burger.classList.remove('open');
+                // Wyzeruj też role-specific guziki na wszelki wypadek.
+                const myRides = document.getElementById('myRidesBtn');
+                const admin = document.getElementById('adminBtn');
+                if (myRides) myRides.style.display = 'none';
+                if (admin) admin.style.display = 'none';
+            }
+        }
+
         function showScreen(screenName) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenName + 'Screen').classList.add('active');
@@ -1158,11 +1183,11 @@ udostępniane żadnym innym podmiotom.</p>
             if (result.success) {
                 currentUser = result.data;
                 sessionStorage.setItem('user', JSON.stringify(currentUser));
-                document.getElementById('hamburgerBtn').style.display = 'flex';
-                
+                setLoggedInUI(true);
+
                 if (currentUser.isDriver) document.getElementById('myRidesBtn').style.display = 'block';
                 if (currentUser.role === 'admin') document.getElementById('adminBtn').style.display = 'block';
-                
+
                 showScreen('concerts');
             } else {
                 showAlert('loginAlert', result.error, 'error');
@@ -1173,9 +1198,7 @@ udostępniane żadnym innym podmiotom.</p>
         function logout() {
             currentUser = null;
             sessionStorage.removeItem('user');
-            document.getElementById('mainNav').classList.remove('open');
-            document.getElementById('hamburgerBtn').style.display = '';
-            document.getElementById('hamburgerBtn').classList.remove('open');
+            setLoggedInUI(false);
             showScreen('login');
         }
         
@@ -1704,7 +1727,7 @@ udostępniane żadnym innym podmiotom.</p>
 
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                document.getElementById('hamburgerBtn').style.display = 'flex';
+                setLoggedInUI(true);
                 if (currentUser.isDriver) document.getElementById('myRidesBtn').style.display = 'block';
                 if (currentUser.role === 'admin') document.getElementById('adminBtn').style.display = 'block';
                 showScreen('concerts');
