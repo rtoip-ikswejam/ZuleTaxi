@@ -671,6 +671,32 @@
     .concert-summary.full .cs-message,
     .concert-summary.none .cs-message { color: var(--text-muted); }
 
+    /* Preview wiadomości / harmonogramu na karcie koncertu */
+    .concert-message-preview {
+        background: #FFF8E1;
+        border: 1.5px solid #FAD033;
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin: 12px 0;
+        cursor: pointer;
+        transition: background 0.15s;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        font-size: 14px;
+    }
+    .concert-message-preview:hover { background: #FFEFB3; }
+    .concert-message-preview strong { color: var(--black); }
+    .concert-message-preview .cmp-text { color: #555; flex: 1 1 auto; min-width: 0; }
+    .concert-message-preview .cmp-link {
+        color: #B8860B;
+        font-weight: 700;
+        font-size: 12px;
+        text-decoration: underline;
+        white-space: nowrap;
+    }
+
     /* ── RESPONSIVE ── */
     /* MOBILE FIRST: poprawki dla najmniejszych ekranów (<480px) */
     @media (max-width: 479px) {
@@ -916,6 +942,10 @@ udostępniane żadnym innym podmiotom.</p>
                         <label>Link do strony wykonawcy (opcjonalny):</label>
                         <input type="url" id="concertArtistUrl" placeholder="https://...">
                     </div>
+                    <div class="form-group">
+                        <label>Wiadomość / Harmonogram (opcjonalna):</label>
+                        <textarea id="concertMessage" rows="4" placeholder="np. harmonogram atrakcji, informacje organizacyjne..."></textarea>
+                    </div>
                     <button type="submit" class="btn">Dodaj</button>
                 </form>
             </div>
@@ -1077,6 +1107,14 @@ udostępniane żadnym innym podmiotom.</p>
             const btn = document.getElementById('hamburgerBtn');
             nav.classList.toggle('open');
             btn.classList.toggle('open');
+        }
+
+        // Pokazuje pełną treść wiadomości/harmonogramu koncertu w modalu.
+        // Wywoływane z karty koncertu kliknięciem na preview wiadomości.
+        function showConcertMessage(data) {
+            document.getElementById('messageModalTitle').textContent = '📋 ' + (data.name || 'Wiadomość');
+            document.getElementById('messageModalContent').textContent = data.message || '';
+            openModal('messageModal');
         }
 
         // Pokazuje / ukrywa nawigację i hamburger w zależności od tego czy ktoś jest zalogowany.
@@ -1328,6 +1366,13 @@ udostępniane żadnym innym podmiotom.</p>
                         <p style="margin:10px 0;color:#666;font-size:14px">${c.address}</p>
                         ${c.artistUrl ? `<div style="margin:8px 0"><a href="${c.artistUrl}" target="_blank" rel="noopener noreferrer" class="info-tag" style="text-decoration:none">🎵 Strona wykonawcy</a></div>` : ''}
                         ${renderConcertSummary(carsCount, freeSeats)}
+                        ${c.message ? `
+                            <div class="concert-message-preview" onclick="showConcertMessage(${JSON.stringify({name: c.name, message: c.message}).split('"').join('&quot;')})">
+                                <strong>📋 Wiadomość:</strong>
+                                <span class="cmp-text">${(c.message.split('\n')[0] || '').substring(0, 60)}${(c.message.length > 60 || c.message.indexOf('\n') !== -1) ? '…' : ''}</span>
+                                <span class="cmp-link">czytaj więcej</span>
+                            </div>
+                        ` : ''}
                         <div class="admin-actions">
                             <button class="btn btn-small" onclick="viewConcertDetails('${c.concertId}')">🚗 Zobacz przejazdy</button>
                             ${currentUser && currentUser.role === 'admin' ? `
@@ -1388,7 +1433,8 @@ udostępniane żadnym innym podmiotom.</p>
                 time: document.getElementById('concertTime').value,
                 location: document.getElementById('concertLocation').value,
                 address: document.getElementById('concertAddress').value,
-                artistUrl: document.getElementById('concertArtistUrl').value
+                artistUrl: document.getElementById('concertArtistUrl').value,
+                message: document.getElementById('concertMessage').value
             });
             
             if (result.success) {
@@ -1565,7 +1611,7 @@ udostępniane żadnym innym podmiotom.</p>
             document.getElementById('editConcertLocation').value = concert.location;
             document.getElementById('editConcertAddress').value = concert.address;
             document.getElementById('editConcertArtistUrl').value = concert.artistUrl || '';
-            document.getElementById('editConcertMessage').value = '';
+            document.getElementById('editConcertMessage').value = concert.message || '';
             document.getElementById('editConcertAlert').innerHTML = '';
             openModal('editConcertModal');
         }
@@ -1750,8 +1796,8 @@ udostępniane żadnym innym podmiotom.</p>
                     <input type="url" id="editConcertArtistUrl" placeholder="https://...">
                 </div>
                 <div class="form-group">
-                    <label>Wiadomość do uczestników (opcjonalna):</label>
-                    <textarea id="editConcertMessage" rows="3" placeholder="np. Zmieniliśmy godzinę koncertu. Prosimy o weryfikację rezerwacji."></textarea>
+                    <label>Wiadomość / Harmonogram (opcjonalna):</label>
+                    <textarea id="editConcertMessage" rows="4" placeholder="np. harmonogram atrakcji, informacje organizacyjne..."></textarea>
                 </div>
                 <button type="submit" class="btn">💾 Zapisz i powiadom uczestników</button>
             </form>
@@ -1789,6 +1835,17 @@ udostępniane żadnym innym podmiotom.</p>
                 </div>
                 <button type="submit" class="btn">💾 Zapisz</button>
             </form>
+        </div>
+    </div>
+
+    <!-- MESSAGE MODAL - wiadomość/harmonogram koncertu -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="messageModalTitle">📋 Wiadomość</h2>
+                <button class="modal-close" onclick="closeModal('messageModal')">×</button>
+            </div>
+            <div id="messageModalContent" style="white-space:pre-wrap;line-height:1.6;font-size:15px"></div>
         </div>
     </div>
 
