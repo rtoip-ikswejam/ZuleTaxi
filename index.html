@@ -671,6 +671,30 @@
     .concert-summary.full .cs-message,
     .concert-summary.none .cs-message { color: var(--text-muted); }
 
+    /* Koncert ze wstrzymanymi zapisami: szary, wyciszony */
+    .concert-card.on-hold {
+        opacity: 0.65;
+        background: var(--gray-light);
+        position: relative;
+    }
+    .concert-card.on-hold .info-tag,
+    .concert-card.on-hold .concert-summary,
+    .concert-card.on-hold .concert-message-preview {
+        filter: grayscale(70%);
+    }
+    .on-hold-badge {
+        display: inline-block;
+        background: #8B6F00;
+        color: #FFF;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        margin: 8px 0;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
     /* Preview wiadomości / harmonogramu na karcie koncertu */
     .concert-message-preview {
         background: #FFF8E1;
@@ -1072,16 +1096,19 @@ udostępniane żadnym innym podmiotom.</p>
         // ═══════════════════════════════════════════════════════════════
         // KONFIGURACJA - WKLEJ URL GOOGLE APPS SCRIPT TUTAJ:
         // ═══════════════════════════════════════════════════════════════
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxOJ7GXhcr00yYVorVJKU7N0d5ShxVwILmlOppLJaJd2BjXQvzjqld9gT7v_sjOvsDcxg/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyMONAYSqmtpYMhpmPPfqqKHA0SPeD4z2L9FLtp_Td2un9meSKF9eXCOwSUmptIkN4H6w/exec';
 
         // Wersje aplikacji - zwiększaj przy każdej zmianie kodu.
         // Frontend i backend muszą mieć identyczną wersję żeby aplikacja działała poprawnie.
         // Stopka pokazuje obie wersje obok siebie - jeśli się różnią, wdrożenie się nie powiodło.
-        const FRONTEND_VERSION = '1.5.0';
-        const FRONTEND_BUILD_DATE = '2026-05-17';
+        const FRONTEND_VERSION = '1.6.1';
+        const FRONTEND_BUILD_DATE = '2026-05-18';
         
         let currentUser = null;
         let currentConcertId = null;
+        // Cache statusu koncertów po concertId - używany w viewConcertDetails
+        // do zablokowania akcji jeśli koncert jest on_hold.
+        const concertsById = {};
         
         // API CALL
         async function apiCall(action, data = {}) {
@@ -1351,6 +1378,10 @@ udostępniane żadnym innym podmiotom.</p>
             if (result.success && result.data.length > 0) {
                 const concerts = result.data;
 
+                // Zapisz status każdego koncertu w globalnym cache - viewConcertDetails
+                // używa tego, żeby ukryć przyciski rezerwacji dla on_hold.
+                concerts.forEach(c => { concertsById[c.concertId] = c; });
+
                 // Pobierz przejazdy dla wszystkich koncertów równolegle (jedna runda zapytań).
                 // Skip wywołań w razie błędu pojedynczego koncertu - reszta i tak się załaduje.
                 const ridesResults = await Promise.all(
@@ -1366,8 +1397,9 @@ udostępniane żadnym innym podmiotom.</p>
                     const freeSeats = activeRides.reduce((sum, r) => sum + (parseInt(r.availableSeats, 10) || 0), 0);
 
                     return `
-                    <div class="concert-card">
+                    <div class="concert-card${c.status === 'on_hold' ? ' on-hold' : ''}">
                         <h3>${c.name}</h3>
+                        ${c.status === 'on_hold' ? '<div class="on-hold-badge">⏸️ Zapisy tymczasowo wstrzymane</div>' : ''}
                         <div><span class="info-tag">📅 ${c.date}</span> <span class="info-tag">🕐 ${c.time}</span></div>
                         <div><span class="info-tag">📍 ${c.location}</span></div>
                         <p style="margin:10px 0;color:#666;font-size:14px">${c.address}</p>
@@ -1384,6 +1416,7 @@ udostępniane żadnym innym podmiotom.</p>
                             <button class="btn btn-small" onclick="viewConcertDetails('${c.concertId}')">🚗 Zobacz przejazdy</button>
                             ${currentUser && currentUser.role === 'admin' ? `
                                 <button class="btn btn-small btn-secondary" onclick="openEditConcert(${JSON.stringify(c).split('"').join('&quot;')})">✏️ Edytuj</button>
+                                <button class="btn btn-small btn-secondary" onclick="toggleConcertHold('${c.concertId}', '${c.status}')">${c.status === 'on_hold' ? '▶️ Wznów zapisy' : '⏸️ Wstrzymaj zapisy'}</button>
                                 <button class="btn btn-small btn-danger" onclick="cancelConcertAdmin('${c.concertId}')">✕ Anuluj koncert</button>
                             ` : ''}
                         </div>
@@ -1400,9 +1433,12 @@ udostępniane żadnym innym podmiotom.</p>
             currentConcertId = concertId;
             const result = await apiCall('getRides', { concertId });
             const rides = result.success ? result.data : [];
-            
+            const concertInfo = concertsById[concertId];
+            const isOnHold = concertInfo && concertInfo.status === 'on_hold';
+
             document.getElementById('ridesList').innerHTML = `
-                ${currentUser.isDriver ? `<button class="btn" onclick="openAddRideModal('${concertId}')" style="margin-bottom:20px">+ Dodaj przejazd</button>` : ''}
+                ${isOnHold ? '<div class="on-hold-badge" style="display:block;text-align:center;margin-bottom:15px">⏸️ Zapisy na ten koncert są tymczasowo wstrzymane</div>' : ''}
+                ${currentUser.isDriver && !isOnHold ? `<button class="btn" onclick="openAddRideModal('${concertId}')" style="margin-bottom:20px">+ Dodaj przejazd</button>` : ''}
                 <h3 style="margin-bottom:15px">Dostępne przejazdy</h3>
                 ${rides.length > 0 ? rides.map(r => `
                     <div class="ride-card">
@@ -1416,7 +1452,7 @@ udostępniane żadnym innym podmiotom.</p>
                                 ${r.passengers.map(p => `<div class="passenger-item">• ${p.name} <span style="color:#999">(${p.direction === 'both' ? 'tam i z powrotem' : p.direction === 'there' ? 'tam' : 'z powrotem'})</span></div>`).join('')}
                             </div>
                         ` : ''}
-                        ${r.availableSeats > 0 && currentUser.userId !== r.driverId ? `<button class="btn btn-small" onclick="bookRide('${r.rideId}')" style="margin-top:10px;width:100%">Zarezerwuj</button>` : ''}
+                        ${r.availableSeats > 0 && currentUser.userId !== r.driverId && !isOnHold ? `<button class="btn btn-small" onclick="bookRide('${r.rideId}')" style="margin-top:10px;width:100%">Zarezerwuj</button>` : ''}
                         ${currentUser.userId === r.driverId ? `<button class="btn btn-danger btn-small" onclick="cancelRide('${r.rideId}')" style="margin-top:10px;width:100%">Anuluj</button>` : ''}
                         <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0">
                             <p style="font-size:13px;color:#666">📞 ${r.driver.phone}</p>
@@ -1425,7 +1461,7 @@ udostępniane żadnym innym podmiotom.</p>
                     </div>
                 `).join('') : '<div class="empty-state">Brak przejazdów</div>'}
             `;
-            
+
             openModal('concertModal');
         }
         
@@ -1656,6 +1692,22 @@ udostępniane żadnym innym podmiotom.</p>
             const result = await apiCall('cancelConcert', { userId: currentUser.userId, userRole: currentUser.role, concertId });
             if (result.success) { alert('Koncert anulowany. Powiadomienia wysłane.'); loadConcerts(); }
             else alert(result.error);
+        }
+
+        // TOGGLE CONCERT HOLD (admin) - wstrzymaj/wznów zapisy
+        async function toggleConcertHold(concertId, currentStatus) {
+            const willHold = currentStatus !== 'on_hold';
+            const msg = willHold
+                ? 'Wstrzymać zapisy na ten koncert? Istniejące przejazdy i rezerwacje zostaną, ale nowych nie da się dodać. Wszyscy uczestnicy zostaną powiadomieni e-mailem.'
+                : 'Wznowić zapisy na ten koncert? Wszyscy uczestnicy zostaną powiadomieni e-mailem.';
+            if (!confirm(msg)) return;
+            const result = await apiCall('toggleConcertHold', { userId: currentUser.userId, userRole: currentUser.role, concertId });
+            if (result.success) {
+                alert(result.data.message);
+                loadConcerts();
+            } else {
+                alert(result.error);
+            }
         }
         
         // LOAD PROFILE
